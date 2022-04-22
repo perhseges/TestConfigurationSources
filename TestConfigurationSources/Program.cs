@@ -15,8 +15,8 @@ var configurationroot = new ConfigurationBuilder()
                 //.AddEnvironmentVariables()
                 .Build();
 
-foreach (var setting in configurationroot.GetChildren())
-    Console.WriteLine($"{setting.Key}: {setting.Value}");
+//foreach (var setting in configurationroot.GetChildren())
+//    Console.WriteLine($"{setting.Key}: {setting.Value}");
 
 Console.WriteLine("-".PadRight(20,'-'));
 
@@ -28,7 +28,7 @@ var configurationroot2 = new ConfigurationBuilder()
 
 configurationroot.Bind(configurationroot2);
 
-var x = configurationroot.GetDebugView();
+//var x = configurationroot.GetDebugView();
 
 foreach (var setting in configurationroot.GetChildren())
     Console.WriteLine($"{setting.Key}: {setting.Value}");
