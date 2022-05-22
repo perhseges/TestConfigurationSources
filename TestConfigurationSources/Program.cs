@@ -22,11 +22,14 @@ configurations
 #endif
 
 #if !DEBUG
+
     configurations.AddEnvironmentVariables();
+
 #endif
 
 var configurationroot = configurations.Build();
 
+#region Azure AppConfiguration Service 
 // Test Azure AppConfiguration Service (possibly keyvault integrated):
 
 var appconfigurationconnection = configurationroot["AppConfigurationConnection"];
@@ -36,6 +39,7 @@ var configurationroot2 = new ConfigurationBuilder()
                 .Build();
 
 configurationroot.Bind(configurationroot2);
+#endregion 
 
 // Show all settings
 
