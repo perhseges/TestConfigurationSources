@@ -3,6 +3,8 @@
 
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
+using Azure.Identity;
+
 
 // https://blog.elmah.io/asp-net-core-not-that-secret-user-secrets-explained/
 // %APPDATA%\Microsoft\UserSecrets\<user_secrets_id>\secrets.json
@@ -14,8 +16,11 @@ var configurations = new ConfigurationBuilder()
 
 #if DEBUG
 
+var pgmversion = "1.3";
+
 configurations
     .AddJsonFile("local.settings.json", optional: true) // Never check in (override .gitignore)
+    .AddJsonFile($"local.{pgmversion}.json", optional: true) // Never check in (override .gitignore)
     .AddJsonFile(@"\\faelles\faelles\Midlertidig\perh\debugsettings.json", optional: true) // File-share locked with NTFS/AD rights
     .AddUserSecrets(assembly: Assembly.GetExecutingAssembly(), optional: true);
 
@@ -27,25 +32,38 @@ configurations
 
 #endif
 
-var configurationroot = configurations.Build();
+var configuration1 = configurations.Build();
 
 #region Azure AppConfiguration Service 
+
+var credential = new VisualStudioCredential();
+//new VisualStudioCredential()
+//(Azure.Core.TokenCredential) new ManagedIdentityCredential()
+//new DefaultAzureCredential()
+
 // Test Azure AppConfiguration Service (possibly keyvault integrated):
+// https://docs.microsoft.com/en-us/azure/azure-app-configuration/howto-integrate-azure-managed-service-identity
+// https://docs.microsoft.com/en-us/dotnet/api/overview/azure/identity-readme
+// https://blog.novacare.no/azure-app-configuration-using-managed-identity/
 
-var appconfigurationconnection = configurationroot["AppConfigurationConnection"];
+var appconfigurationconnection = configuration1["AppConfigurationConnection"];
 
-var configurationroot2 = new ConfigurationBuilder()
-                .AddAzureAppConfiguration(options => options.Connect(appconfigurationconnection))
-                .Build();
+//configurations.AddAzureAppConfiguration(options => options.Connect(appconfigurationconnection));
+configurations.AddAzureAppConfiguration(options =>
+                    options.Connect(new Uri("https://perh-appconfig-ac.azconfig.io"), 
+                    credential
+                    ));
 
-configurationroot.Bind(configurationroot2);
+configuration1 = configurations.Build(); // Rebuild
+
+
 #endregion 
 
 // Show all settings
 
-var x = configurationroot.GetDebugView();
+var x = configuration1.GetDebugView();
 
-configurationroot
+configuration1
     .AsEnumerable()
     .ToDictionary(c => c.Key, c => c.Value)
     .ToList()
